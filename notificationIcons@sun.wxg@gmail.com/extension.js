@@ -27,13 +27,15 @@ let notificationIcons;
 function init(metadata) {
     //let theme = imports.gi.Gtk.IconTheme.get_default();
     //theme.append_search_path(metadata.path + '/icons');
-}
-
-function enable() {
     notificationIcons = new NotificationIcons();
 }
 
+function enable() {
+    notificationIcons.box.show();
+}
+
 function disable() {
-    notificationIcons.destroy();
-    notificationIcons = null;
+    notificationIcons.box.hide();
+    //notificationIcons.destroy();
+    //notificationIcons = null;
 }
