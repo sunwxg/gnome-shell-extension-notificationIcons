@@ -57,7 +57,7 @@ class NotificationBox extends St.BoxLayout {
 
     _createIcon(notification) {
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        let height = Main.panel._centerBox.get_height() / scaleFactor;
+        let height = Main.panel._centerBox.get_height() / scaleFactor - 4;
 
         let icon;
         let gicon = notification.gicon ? notification.gicon : notification._gicon;
@@ -74,7 +74,7 @@ class NotificationBox extends St.BoxLayout {
         }
 
         let box = new St.Widget({ layout_manager: new Clutter.BinLayout() });
-        box.set_style("margin-left: 3px; margin-right: 3px");
+        box.set_style("margin-left: 3px; margin-right: 3px; margin-top: 2px; margin-bottom: 2px;");
         box.add_child(icon);
 
         return box;
