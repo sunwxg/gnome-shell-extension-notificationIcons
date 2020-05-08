@@ -101,9 +101,11 @@ class NotificationBox extends St.BoxLayout {
 
     vfunc_allocate(box, flags) {
         super.vfunc_allocate(box,flags);
-
-        let [x, y] = Main.panel._centerBox.get_position();
-        let [width, height] = Main.panel._centerBox.get_size();
+        let centerBox = Main.panel._centerBox.get_allocation_box();
+        let x = centerBox.x1;
+        let y = centerBox.y1;
+        let width = centerBox.get_width();
+        let height = centerBox.get_height();
 
         box.set_origin(x + width, y);
         this.set_allocation(box, flags);
