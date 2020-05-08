@@ -11,65 +11,70 @@ class NotificationBox extends St.BoxLayout {
 
         this._sources = new Map();
 
-        Main.messageTray.connect('source-added', this._onSourceAdded.bind(this));
-        Main.messageTray.connect('source-removed', this._onSourceRemoved.bind(this));
-
-        Main.layoutManager.addChrome(this);
-    }
-
-    _onSourceAdded(tray, source) {
-        let notificationAddedId = source.connect('notification-added',
-                                                 this._onNotificationAdded.bind(this));
-    }
-
-    _onNotificationAdded(source, notification) {
-        if (this._sources.has(source.title)) {
-            let value = this._sources.get(source.title);
-            value.count++;
-            this._updateLabel(source);
+        let dateMenu = Main.panel.statusArea.dateMenu;
+        if (!dateMenu)
             return;
-        }
 
-        let obj = {
-            count: 1,
-            icon: this._createIcon(source),
-        };
+        this._notificationSection = dateMenu._messageList._notificationSection;
+        this._actorAddId = this._notificationSection._list.connect_after('actor-added', this._sync.bind(this));
+        this._actorRemoveId = this._notificationSection._list.connect('actor-removed', this._sync.bind(this));
 
-        this.add_child(obj.icon);
-        this._sources.set(source.title, obj);
+        Main.layoutManager.addChrome(this, { trackFullscreen: true });
+        this._sync();
     }
 
-    _onSourceRemoved(tray, source) {
-        if (!this._sources.has(source.title)) {
-            return;
-        }
-
-        let value = this._sources.get(source.title);
-        value.count--;
-
-        if (value.count == 0) {
+    _sync() {
+        this._sources.forEach(value => {
             this.remove_child(value.icon);
-            this._sources.delete(source.title);
-        } else
-            this._updateLabel(source);
+        });
+        this._sources.clear();
+
+        let messages = this._notificationSection._messages;
+        messages.forEach((message) => {
+            let notification = message.notification;
+
+            if (this._sources.has(notification.title)) {
+                let value = this._sources.get(notification.title);
+                value.count++;
+                this._updateLabel(notification);
+                return;
+            }
+
+            let icon = this._createIcon(notification);
+            if (!icon)
+                return;
+
+            let value = {
+                count: 1,
+                icon: icon,
+            };
+
+            this.add_child(value.icon);
+            this._sources.set(notification.title, value);
+        });
+
     }
 
-    _createIcon(source) {
+    _createIcon(notification) {
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        let width = Main.panel._centerBox.get_height() / scaleFactor * 1.5;
         let height = Main.panel._centerBox.get_height() / scaleFactor;
 
-        let gicon = source.gicon ? source.gicon : source._gicon;
-        let icon = new St.Icon({ style_class: 'system-status-icon',
-            x_expand: true,
-            x_align: Clutter.ActorAlign.CENTER,
-            y_expand: true,
-            y_align: Clutter.ActorAlign.CENTER,
+        let icon;
+        let gicon = notification.gicon ? notification.gicon : notification._gicon;
+        if (!gicon) {
+            icon = notification.source.createIcon(height);
+        } else {
+            icon = new St.Icon({ style_class: 'system-status-icon',
+                                 x_expand: true,
+                                 x_align: Clutter.ActorAlign.CENTER,
+                                 y_expand: true,
+                                 y_align: Clutter.ActorAlign.CENTER,
                                  gicon: gicon,
                                  icon_size: height, });
+        }
 
         let box = new St.Widget({ layout_manager: new Clutter.BinLayout() });
-        //box.set_size(width, height);
+        box.set_style("margin-left: 3px; margin-right: 3px");
         box.add_child(icon);
 
         return box;
@@ -105,6 +110,14 @@ class NotificationBox extends St.BoxLayout {
     }
 
     destroy() {
+        this._notificationSection._list.disconnect(this._actorAddId);
+        this._notificationSection._list.disconnect(this._actorRemoveId);
+
+        this._sources.forEach(value => {
+            this.remove_child(value.icon);
+        });
+        this._sources.clear();
+
         Main.layoutManager.removeChrome(this);
         super.destroy();
     }

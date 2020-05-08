@@ -25,8 +25,6 @@ class NotificationIcons {
 let notificationIcons;
 
 function init(metadata) {
-    //let theme = imports.gi.Gtk.IconTheme.get_default();
-    //theme.append_search_path(metadata.path + '/icons');
     notificationIcons = new NotificationIcons();
 }
 
@@ -36,6 +34,4 @@ function enable() {
 
 function disable() {
     notificationIcons.box.hide();
-    //notificationIcons.destroy();
-    //notificationIcons = null;
 }
