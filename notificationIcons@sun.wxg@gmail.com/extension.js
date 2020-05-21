@@ -29,6 +29,13 @@ function init(metadata) {
 }
 
 function enable() {
+    if (Main.layoutManager._startingUp)
+        _startupPreparedId = Main.layoutManager.connect('startup-complete', () => enableNotification());
+    else
+        enableNotification();
+}
+
+function enableNotification() {
     notificationIcons.box.show();
 }
 
